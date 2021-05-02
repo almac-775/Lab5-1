@@ -2,6 +2,30 @@
 const canvas = document.getElementById('user-image');
 const ctx = canvas.getContext('2d');
 const img = new Image(); // used to load image from <input> and draw to canvas
+const volumeIcon = document.querySelector("img");
+const imageInput = document.getElementById('image-input');
+const genButton = document.querySelector("[type='submit']");
+const clearButton = document.querySelector("[type='reset']");
+const volume = document.querySelector("[type='range']");
+const voiceOptions = document.getElementById('voice-selection');
+const readButton = document.querySelector("[type='button']");
+var topSpeech = new SpeechSynthesisUtterance();
+var botSpeech = new SpeechSynthesisUtterance();
+var voices = speechSynthesis.getVoices();
+
+speechSynthesis.addEventListener("voiceschanged", () => {
+  //voiceOptions.value = voices;
+  voices = speechSynthesis.getVoices();
+  console.log(voices.length);
+    for(var i = 0; i < voices.length; i++) {
+      console.log(voices[i]);
+      var option = document.createElement('option');
+      option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
+      option.setAttribute('data-lang', voices[i].lang);
+      option.setAttribute('data-name', voices[i].name);
+      voiceOptions.appendChild(option);
+    } 
+});
 
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
@@ -29,7 +53,7 @@ img.addEventListener('load', () => {
   // - If you draw the image to canvas here, it will update as soon as a new image is selected
 });
 
-const imageInput = document.getElementById('image-input');
+
 
 imageInput.addEventListener('change', event => {
     const imageFile = imageInput.files[0];
@@ -38,13 +62,14 @@ imageInput.addEventListener('change', event => {
     img.alt = imageFile.alt;
 });
 
-const genButton = document.querySelector("[type='submit']");
+
 
 genButton.addEventListener('click', event => {
     // Toggle buttons
     document.querySelector("[type='submit']").disabled = true;
     document.querySelector("[type='reset']").disabled = false;
     document.querySelector("[type='button']").disabled = false;
+    document.getElementById('voice-selection').disabled = false;
     // Get texts
     const upperText = document.getElementById('text-top');
     const lowerText = document.getElementById('text-bottom');
@@ -61,8 +86,6 @@ genButton.addEventListener('click', event => {
     ctx.fillText(lowerText.value, canvas.width/2, canvas.height - 30);
 });
 
-const clearButton = document.querySelector("[type='reset']");
-
 clearButton.addEventListener('click', event => {
     // clear image and/or text
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -71,27 +94,42 @@ clearButton.addEventListener('click', event => {
     document.querySelector("[type='submit']").disabled = true;
     document.querySelector("[type='reset']").disabled = false;
     document.querySelector("[type='button']").disabled = false;
+    document.getElementById('voice-selection').disabled = true;
 });
-
-const readButton = document.querySelector("[type='button']");
 
 readButton.addEventListener('click', event => {
   // Get Texts
   const upperText = document.getElementById('text-top');
   const lowerText = document.getElementById('text-bottom');
 
-  let topSpeech = new SpeechSynthesisUtterance(upperText.value);
-  let botSpeech = new SpeechSynthesisUtterance(lowerText.value);
+  topSpeech = new SpeechSynthesisUtterance(upperText.value);
+  botSpeech = new SpeechSynthesisUtterance(lowerText.value);
+
+  topSpeech.volume = (volume.value / 100);
+  botSpeech.volume = (volume.value / 100);
+  //topSpeech.voice = voiceOptions.Selection;
+  //botSpeech.voice = voiceOptions.Selection;
+
+  console.log(voiceOptions.value);
+  voices.forEach((voice) => {
+    
+    let voicename = voice.name + " (" + voice.lang + ")";
+    console.log(voicename);
+    if (voicename == voiceOptions.value) {
+      console.log('selection successful');
+      topSpeech.voice = voice;
+      botSpeech.voice = voice;
+    }
+  });
+
   speechSynthesis.speak(topSpeech);
   speechSynthesis.speak(botSpeech);
 });
 
-const volume = document.querySelector("[type='range']");
-const volumeIcon = document.querySelector("img");
-
 volume.addEventListener('change', event =>{
-  console.log(volume.value);
-  SpeechSynthesisUtterance.volume = (volume.value * 0.01);
+  //console.log(volume.value / 100);
+  topSpeech.volume = (volume.value / 100);
+  botSpeech.volume = (volume.value / 100);
   if (volume.value == 0) {
     volumeIcon.src = "icons/volume-level-0.svg";
   }
@@ -105,6 +143,8 @@ volume.addEventListener('change', event =>{
     volumeIcon.src = "icons/volume-level-3.svg";
   }
 });
+
+
 
 
 /**
