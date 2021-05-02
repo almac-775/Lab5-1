@@ -1,16 +1,111 @@
 // script.js
-
+const canvas = document.getElementById('user-image');
+const ctx = canvas.getContext('2d');
 const img = new Image(); // used to load image from <input> and draw to canvas
 
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
   // TODO
+    // Clear canvas context
+    const dim = getDimmensions(canvas.width, canvas.height, img.width, img.height);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // toggle buttons
+    document.querySelector("[type='submit']").disabled = false;
+    document.querySelector("[type='reset']").disabled = true;
+    document.querySelector("[type='button']").disabled = true;
+
+    // Fills the canvas with black
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // draw uploaded image
+    ctx.drawImage(img, dim['startX'], dim['startY'], dim['width'], dim['height']);
 
   // Some helpful tips:
   // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
   // - Clear the form when a new image is selected
   // - If you draw the image to canvas here, it will update as soon as a new image is selected
 });
+
+const imageInput = document.getElementById('image-input');
+
+imageInput.addEventListener('change', event => {
+    const imageFile = imageInput.files[0];
+    console.log(imageFile);
+    img.src = URL.createObjectURL(imageFile);
+    img.alt = imageFile.alt;
+});
+
+const genButton = document.querySelector("[type='submit']");
+
+genButton.addEventListener('click', event => {
+    // Toggle buttons
+    document.querySelector("[type='submit']").disabled = true;
+    document.querySelector("[type='reset']").disabled = false;
+    document.querySelector("[type='button']").disabled = false;
+    // Get texts
+    const upperText = document.getElementById('text-top');
+    const lowerText = document.getElementById('text-bottom');
+    // Generate text onto canvas
+    ctx.font = "30px Arial";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.shadowColor="black";
+    ctx.shadowBlur=7;
+    ctx.lineWidth=5;
+    // Upper text
+    ctx.fillText(upperText.value, canvas.width/2, 50);
+    // Lower text
+    ctx.fillText(lowerText.value, canvas.width/2, canvas.height - 30);
+});
+
+const clearButton = document.querySelector("[type='reset']");
+
+clearButton.addEventListener('click', event => {
+    // clear image and/or text
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // toggle relevant buttons
+    document.querySelector("[type='submit']").disabled = true;
+    document.querySelector("[type='reset']").disabled = false;
+    document.querySelector("[type='button']").disabled = false;
+});
+
+const readButton = document.querySelector("[type='button']");
+
+readButton.addEventListener('click', event => {
+  // Get Texts
+  const upperText = document.getElementById('text-top');
+  const lowerText = document.getElementById('text-bottom');
+
+  let topSpeech = new SpeechSynthesisUtterance(upperText.value);
+  let botSpeech = new SpeechSynthesisUtterance(lowerText.value);
+  speechSynthesis.speak(topSpeech);
+  speechSynthesis.speak(botSpeech);
+});
+
+const volume = document.querySelector("[type='range']");
+const volumeIcon = document.querySelector("img");
+
+volume.addEventListener('change', event =>{
+  console.log(volume.value);
+  SpeechSynthesisUtterance.volume = (volume.value * 0.01);
+  if (volume.value == 0) {
+    volumeIcon.src = "icons/volume-level-0.svg";
+  }
+  else if (volume.value > 0 && volume.value <= 33) {
+    volumeIcon.src = "icons/volume-level-1.svg";
+  }
+  else if (volume.value > 33 && volume.value <= 66) {
+    volumeIcon.src = "icons/volume-level-2.svg";
+  }
+  else {
+    volumeIcon.src = "icons/volume-level-3.svg";
+  }
+});
+
 
 /**
  * Takes in the dimensions of the canvas and the new image, then calculates the new
